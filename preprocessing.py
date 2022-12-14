@@ -4,7 +4,7 @@ class StandardScaler:
         self.mean_ = None
         self.scale_ = None;
     def fit(self,X):
-        #求出X的每一个特征的均值和方差
+        #求出X的每一个特征的均值和标准差
         assert X.ndim == 2,"The dimension of X must be 2"
         self.mean_ = [np.mean(X[:,i]) for i in range(X.shape[1])]
         self.scale_ = [np.std(X[:, i]) for i in range(X.shape[1])]
