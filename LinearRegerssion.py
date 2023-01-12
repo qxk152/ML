@@ -39,6 +39,9 @@ class LinearRegression:
             #     res[i] = (X_b.dot(theta)-y).dot(X_b[:,i])
             res = X_b.T.dot(X_b.dot(theta) - y)
             return res * 2. / len(X_b)
+
+
+
         def gradient_descent(X_b, y, initial_theta, eta, n_iters, epsilon=1e-8):
             """沿着负梯度的方向不断进行搜索 直到两次的损失函数差小于epsilon"""
             theta = initial_theta
@@ -62,6 +65,35 @@ class LinearRegression:
         self._theta = theta
         self.coeffient_ = theta[1:]
         self.intercept_ = theta[0]
+        return self
+
+        ## 用随机梯度算法进行拟合数据
+    def fit_sgd(self, X_train, y_train, n_iters=5, t0=5, t1=50):
+        # n_itres 代表要对整个数据循环几次 为了保证信息不丢失 需要至少把每个数据都用到 还要保证随机性
+        assert X_train.shape[0] == y_train.shape[0], \
+            "the size of X_train must be equal to the size of y_train"
+        def dJ_sgd(theta, X_b_i, y_i):
+                return X_b_i.T.dot(X_b_i.dot(theta) - y_i) * 2.
+
+        def sgd(X_b, y, init_theta, n_iters, t0=5, t1=50):
+            def learning_rate(t):
+                    return t0 / (t + t1)
+            theta = init_theta
+            m = len(X_b)
+            ## 如何保证随机性？ 先把数据打乱 ，然后都循环一次
+            for cur_iters in range(n_iters):
+                indexs = np.random.permutation(m)  ##对 [0 m-1]进行乱序排列 得到乱系索引
+                X_b_new = X_b[indexs]
+                y_new = y[indexs]
+                for i in range(m):
+                    gradient = dJ_sgd(theta, X_b_new[i], y_new[i])
+                    theta = theta - learning_rate(cur_iters * m + i) * gradient
+            return theta
+        X_b = np.hstack([np.ones((len(X_train), 1)), X_train])
+        initial_theta = np.random.randn(X_b.shape[1])  # 参数 是The dimensions of the returned array
+        self._theta = sgd(X_b, y_train, initial_theta, n_iters, t0, t1)
+        self.intercept_ = self._theta[0]
+        self.coeffient_ = self._theta[1:]
         return self
     def predict(self,X_predict):
         """给定待预测数据集X_predict，返回表示X_predict的结果向量"""
